@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería Minimalista</title>
+    <!-- Carga de Tailwind CSS para el estilizado minimalista y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de Font Awesome para el ícono de WhatsApp -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Estilos ajustados para mostrar la foto completa */
+        .image-container { 
+            /* Contenedor que mantiene la estética de la cuadrícula (cuadrado) */
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            cursor: pointer;
+            background-color: #ffffff; /* Fondo blanco para el "relleno" cuando la foto no es cuadrada */
+            /* Borde mínimo de 1px para simular la separación mínima */
+            border: 1px solid #f7f7f7; 
+        }
+        .image-container:hover {
+            transform: scale(1.02); /* Reducir un poco el scale en hover para minimizar el impacto visual de la separación */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery-image {
+            /* CLAVE: object-fit: contain asegura que la imagen se vea completa sin recortes. */
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
+            opacity: 1; 
+        }
+        
+        /* Estilos para el cuerpo y la fuente */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            /* Se elimina el padding-bottom y se añade padding-top para el nuevo header fijo */
+            padding-top: 0; 
+            padding-bottom: 0; 
+        }
+
+        /* Estilo para el encabezado principal de la galería que ahora será fijo */
+        #fixed-gallery-header {
+            position: sticky;
+            top: 0; /* Lo mantiene arriba */
+            z-index: 90; /* Debajo del contenedor de control, si existiera */
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Estilos para el indicador de selección */
+        .selection-indicator {
+            position: absolute;
+            top: 10px; /* Separación de la esquina */
+            right: 10px; /* Separación de la esquina */
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            border: 2px solid white;
+            background-color: rgba(255, 255, 255, 0.4); /* Gris/transparente para no seleccionado */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: transparent; /* Ocultar el checkmark inicial */
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            z-index: 50; /* Asegura que esté sobre la imagen */
+            pointer-events: none; /* Permite que el click atraviese el indicador para activar el evento del contenedor */
+        }
+        .selection-indicator.selected {
+            background-color: #10b981; /* Verde (bg-green-500) */
+            border-color: #059669; /* Verde oscuro (border-green-700) */
+            color: white; /* Mostrar checkmark */
+        }
+
+        /* Estilos específicos para la portada */
+        #cover-section {
+            /* Establece la imagen de fondo usando la primera foto de la colección */
+            background-image: url('Fotos123/21KPlz_0001.JPG');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Opcional: crea un efecto parallax sutil */
+        }
+
+        /* Estilo para el modal/lightbox (sin cambios, se mantiene oculto) */
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            object-fit: contain;
+            animation: zoomIn 0.3s;
+        }
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #ccc;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.8); }
+            to { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="p-0">
+    
+    <!-- SECCIÓN DE PORTADA (FULL-SCREEN) -->
+    <section id="cover-section" class="min-h-screen relative flex justify-center items-center">
+        <!-- Overlay oscuro y desenfoque para mejorar la legibilidad del texto -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+        <!-- Contenido Central de la Portada -->
+        <div class="relative z-10 text-center p-6 md:p-12 bg-white/20 backdrop-blur-md rounded-xl shadow-2xl">
+            <h1 class="text-6xl md:text-8xl font-black text-white drop-shadow-lg">
+                FOTOS 21KPLZ
+            </h1>
+            <p class="text-xl md:text-3xl font-light text-gray-200 mt-4 drop-shadow-md">
+                Colección Minimalista (0001 - 0100)
+            </p>
+            <a href="#gallery-header" class="mt-8 inline-block px-8 py-3 bg-white text-gray-800 font-bold rounded-full shadow-lg hover:bg-gray-200 transition duration-300">
+                Ver Galería
+            </a>
+        </div>
+    </section>
+
+    <!-- ENCABEZADO DE LA GALERÍA (Se mantiene) -->
+    <header id="gallery-header" class="text-center mb-0 p-8 bg-white shadow-xl relative"> 
+        <h2 class="text-3xl font-extrabold text-gray-800">
+            Mosaico Completo
+        </h2>
+        <p class="text-gray-500 mt-2">
+            Desplácese para ver todas las 100 imágenes
+        </p>
+    </header>
+
+    <!-- CONTADOR Y BOTÓN PEGADOS EN LA PARTE SUPERIOR (NUEVO) -->
+    <div id="fixed-controls" 
+         class="sticky top-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-xl p-4 flex justify-center md:justify-between items-center z-[100] border-b border-gray-200">
+        
+        <!-- Contador de Fotos Seleccionadas -->
+        <span class="inline-flex items-center justify-center px-4 py-2 text-sm md:text-base font-semibold leading-none text-green-800 bg-green-200 rounded-full shadow-lg transition duration-300">
+            Fotos Seleccionadas: <span id="selection-count" class="ml-3 font-bold text-lg md:text-xl">0</span>
+        </span>
+
+        <!-- Botón de WhatsApp Desktop -->
+        <button id="whatsapp-button" onclick="generateWhatsAppLink()" 
+                class="hidden md:flex items-center px-6 py-3 bg-green-500 text-white font-bold rounded-full shadow-xl hover:bg-green-600 transition duration-300 transform hover:scale-[1.03] disabled:bg-gray-400 disabled:shadow-none ml-4"
+                disabled>
+            <i class="fab fa-whatsapp text-lg mr-2"></i>
+            Solicitar vía WhatsApp
+        </button>
+
+        <!-- Botón de WhatsApp Móvil (más pequeño) -->
+        <button id="whatsapp-button-mobile" onclick="generateWhatsAppLink()" 
+                class="md:hidden flex items-center px-4 py-2 bg-green-500 text-white font-bold rounded-full shadow-xl hover:bg-green-600 transition duration-300 transform hover:scale-[1.03] disabled:bg-gray-400 disabled:shadow-none ml-4"
+                disabled>
+            <i class="fab fa-whatsapp text-lg"></i>
+            <span id="whatsapp-text-mobile" class="ml-2">Solicitar</span>
+        </button>
+    </div>
+
+    <!-- Contenedor de la Galería (Formato Mosaico/Grid) -->
+    <div id="gallery-container" 
+         class="grid gap-px lg:grid-cols-3 grid-cols-1">
+        <div class="col-span-full text-center py-10 text-gray-400" id="loading-message">
+            Cargando galería...
+        </div>
+    </div>
+
+    <!-- Modal/Lightbox (Se mantiene en el HTML pero ya no se activa al hacer clic en la miniatura) -->
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="close-btn" onclick="closeModal(event)">&times;</span>
+        <img class="modal-content rounded-lg" id="modalImage">
+    </div>
+
+    <!-- El footer original (CONTADOR PEGADO EN LA PARTE INFERIOR) se elimina completamente ya que los controles se movieron arriba. -->
+
+    <script>
+        // Variables globales para el setup de la galería
+        const totalImages = 1529;
+        const basePath = 'Fotos123/21KPlz_';
+        const fileExtension = '.JPG';
+        const galleryContainer = document.getElementById('gallery-container');
+        const selectionCountElement = document.getElementById('selection-count');
+        const whatsappButton = document.getElementById('whatsapp-button');
+        const whatsappButtonMobile = document.getElementById('whatsapp-button-mobile');
+        
+        // Número de teléfono de destino (formato internacional sin el signo +)
+        const targetPhoneNumber = "584241883844"; 
+
+        // Estado global para rastrear las imágenes seleccionadas
+        const selectedImages = new Set(); 
+
+        /**
+         * Actualiza el contador visible de fotos seleccionadas y el estado del botón.
+         */
+        function updateSelectionCounter() {
+            const count = selectedImages.size;
+            selectionCountElement.textContent = count;
+            
+            // Habilitar o deshabilitar el botón de WhatsApp
+            const isDisabled = count === 0;
+            whatsappButton.disabled = isDisabled;
+            whatsappButtonMobile.disabled = isDisabled;
+
+            // Opcional: Cambiar texto del botón móvil si el contador es alto (Mejora UX en móvil)
+            const mobileTextSpan = document.getElementById('whatsapp-text-mobile');
+            if (mobileTextSpan) {
+                mobileTextSpan.textContent = (count > 0 && count <= 5) ? 'Solicitar' : 
+                                              (count > 5) ? 'Solicitar (' + count + ')' : 'Solicitar';
+            }
+        }
+        
+        /**
+         * Genera el enlace de WhatsApp con la lista de fotos seleccionadas y abre la ventana.
+         */
+        function generateWhatsAppLink() {
+            if (selectedImages.size === 0) {
+                console.log("No hay fotos seleccionadas.");
+                return;
+            }
+
+            // 1. Obtener los índices de las fotos seleccionadas, ordenados.
+            const selectedIndices = Array.from(selectedImages).sort((a, b) => a - b);
+            
+            // 2. Formatear la lista de fotos para mostrar SOLO el nombre del archivo (ej: 21KPlz_0001).
+            const photoList = selectedIndices.map(index => {
+                const paddedIndex = String(index).padStart(4, '0');
+                // Devolver solo el nombre del archivo sin la ruta ni la extensión
+                return `21KPlz_${paddedIndex}`; 
+            }).join('\n'); 
+
+            
+            // 3. Crear el mensaje
+            const message = `¡Hola! Me gustaría solicitar las siguientes fotos de la galería:\n\n${photoList}\n\nGracias.`;
+            
+            // 4. Codificar el mensaje para la URL
+            const encodedMessage = encodeURIComponent(message);
+            
+            // 5. Construir el enlace
+            const whatsappUrl = `https://wa.me/${targetPhoneNumber}?text=${encodedMessage}`;
+            
+            // 6. Abrir en una nueva pestaña
+            window.open(whatsappUrl, '_blank');
+            console.log("Mensaje de WhatsApp generado y abierto:", whatsappUrl);
+        }
+
+        /**
+         * Función que maneja el click en la miniatura, activando SOLO la selección.
+         * @param {number} index - El índice de la foto (1 a 100).
+         * @param {string} imageSrc - La ruta de la imagen.
+         */
+        function handlePhotoClick(index, imageSrc) {
+            const container = document.getElementById(`photo-${index}`);
+            const indicator = container.querySelector('.selection-indicator');
+            
+            // 1. Alternar Selección
+            if (selectedImages.has(index)) {
+                selectedImages.delete(index);
+                indicator.classList.remove('selected');
+                indicator.innerHTML = '';
+            } else {
+                selectedImages.add(index);
+                indicator.classList.add('selected');
+                indicator.innerHTML = '&#10003;'; // Unicode checkmark
+            }
+            
+            // 2. Actualizar el contador y el botón
+            updateSelectionCounter();
+        }
+
+        /**
+         * Función para generar y cargar la galería de imágenes.
+         */
+        function loadGallery() {
+            const loadingMessage = document.getElementById('loading-message');
+            // Limpiar mensaje de carga
+            if (loadingMessage) loadingMessage.remove();
+
+            for (let i = 1; i <= totalImages; i++) {
+                // 1. Generar el índice con relleno de ceros (0001, 0002, ..., 0100)
+                const paddedIndex = String(i).padStart(4, '0');
+                
+                // 2. Construir la ruta completa del archivo
+                const imageSrc = `${basePath}${paddedIndex}${fileExtension}`;
+
+                // 3. Crear el elemento de imagen
+                const img = document.createElement('img');
+                img.src = imageSrc;
+                img.alt = `Foto ${paddedIndex}`;
+                
+                // 4. Clases de la imagen: object-fit: contain
+                img.className = 'gallery-image';
+
+                // 5. Crear el contenedor (Wrapper) para el efecto de mosaico y la interacción
+                const wrapper = document.createElement('div');
+                // Se añade 'relative' para posicionar el indicador de selección
+                wrapper.className = 'image-container rounded-none shadow-sm hover:shadow-xl aspect-square flex justify-center items-center relative'; 
+                wrapper.id = `photo-${i}`; // ID único para el manejo de la selección
+                
+                // 6. Crear el indicador de selección (círculo)
+                const indicator = document.createElement('div');
+                indicator.className = 'selection-indicator';
+                
+                // 7. Manejar el click en el contenedor (SOLO selección)
+                wrapper.onclick = () => handlePhotoClick(i, imageSrc);
+
+                // 8. Manejar error de carga (en caso de que el archivo local no exista)
+                img.onerror = function() {
+                    console.warn(`No se pudo cargar: ${imageSrc}. Usando placeholder.`);
+                    // Usar un placeholder si la imagen real no se carga
+                    this.src = `https://placehold.co/300x300/e0e0e0/333333?text=Foto+${paddedIndex}`;
+                    this.onerror = null; // Evitar loop de error
+                };
+
+                // 9. Insertar el indicador y la imagen en el contenedor y el contenedor en la galería
+                wrapper.appendChild(indicator);
+                wrapper.appendChild(img);
+                galleryContainer.appendChild(wrapper);
+            }
+            // Inicializar el contador y el estado del botón
+            updateSelectionCounter();
+        }
+
+        // Estas funciones quedaron sin usar después de eliminar el modal, pero se mantienen por si acaso.
+        function openModal(src) {}
+        function closeModal(event) {}
+
+        // Iniciar la carga de la galería al terminar de cargar la página
+        window.onload = loadGallery;
+    </script>
+
+</body>
+</html>
